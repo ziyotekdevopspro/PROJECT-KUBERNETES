@@ -1,0 +1,64 @@
+# - hosts: kube_workers
+#   become: yes
+#   gather_facts: yes
+#   tasks:
+  
+#     - name: copy token from ansible to workers
+#       become: yes
+#       copy:
+#         src: /home/ansible/token
+#         dest: /home/ansible/token.sh
+#         mode: 0777
+#         remote_src: yes
+#         owner: ansible
+
+
+#     - name: Joining slave node to master node
+#       shell: "sh /home/ansible/token.sh"
+#       register: joined
+
+
+- name: kube-master
+  hosts: kube_master
+  become: yes
+  remote_user: ansible
+  tasks:
+    
+   - name: Copying token to worker nodes
+     copy: 
+       src: /home/ansible/token.sh
+       dest: /home/ansible/token.txt
+       mode: 0777
+       remote_src: yes
+       owner: ansible
+
+
+   - name: Joining worker nodes with kubernetes master
+     shell: |
+      kubeadm reset -f
+      cat /home/ansible/token.txt | tail -2 > out.sh
+      chmod +x out.sh
+      sh out.sh
+
+
+#     - debug:
+#         msg: "{{ joined }}"
+# #      - name: get join command
+#        shell: kubeadm token create --print-join-command
+#        register: join_command_raw
+
+#      - name: set join command
+#        set_fact:
+#          join_command: "{{ join_command_raw.stdout_lines[0] }}"
+
+
+# - hosts: kube_workers
+#   become: yes
+#   tasks:
+#      - name: join cluster
+#        shell: "{{ hostvars['kube_master'].join_command }} --ignore-preflight-errors all  >> node_joined.txt"
+#        args:
+#          chdir: $HOME/ansible
+#          creates: node_joined.txt
+
+    

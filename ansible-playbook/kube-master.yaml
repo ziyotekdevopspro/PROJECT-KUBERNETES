@@ -1,0 +1,44 @@
+- hosts: kube_master
+  become: yes
+  tasks:
+    - name: Resetting kubeadm
+      shell: kubeadm reset -f
+      register: output
+
+    # - name: initialize the cluster
+    #   shell: kubeadm init --pod-network-cidr=10.244.0.0/16 >> token
+    #   args:
+    #     chdir: /home/ansible
+    #     creates: token.txt
+   
+
+    # - name: initialize K8S cluster
+    #   become: yes
+    #   shell: kubeadm init  --apiserver-advertise-address=192.168.37.27 --pod-network-cidr=10.244.0.0/16 >> token
+
+    - name: create .kube directory
+      become: yes
+      become_user: ansible
+      file:
+        path: /home/ansible/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ansible/.kube/config
+        remote_src: yes
+        owner: ansible
+
+    - name: giving permission to folder
+      shell: 
+        cmd: chown $(id -u):$(id -g) /home/ansible/.kube
+
+    - name: install Pod network
+      become: yes
+      become_user: ansible
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/a70459be0084506e4ec919aa1c114638878db11b/Documentation/kube-flannel.yml >> pod_network_setup.txt
+      args:
+        chdir: /home/ansible
+        creates: pod_network_setup.txt
