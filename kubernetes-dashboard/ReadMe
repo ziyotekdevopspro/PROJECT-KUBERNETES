@@ -1,0 +1,6 @@
+To install the kubernetes dashboard on a master node we just apply the reccomended.yaml
+kubectl apply -f recommended.yaml
+
+and to forward the default port to specific nodeport we appy nodeport_dashboard_patch.yaml
+
+kubectl apply -f nodeport_dashboard_patch.yaml
